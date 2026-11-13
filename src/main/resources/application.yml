@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: shortly
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shortly}
+    username: ${DB_USER:shortly}
+    password: ${DB_PASSWORD:shortly}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      # Redis is an optimisation, not a dependency: fail fast and fall back to Postgres.
+      timeout: 250ms
+      connect-timeout: 250ms
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8080
+  shutdown: graceful
+  # Behind a load balancer set this to "native" so getRemoteAddr() honours X-Forwarded-For.
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+shortly:
+  base-url: ${BASE_URL:http://localhost:8080}
+  ip-hash-salt: ${IP_HASH_SALT:change-me}
+  cache:
+    ttl: 1h
+    negative-ttl: 1m
+  rate-limit:
+    enabled: true
+    create:            # burst of 10, then 1 every 6s (10/min) per client IP
+      capacity: 10
+      refill-per-second: 0.1667
+    redirect:          # burst of 100, then 20/s per client IP
+      capacity: 100
+      refill-per-second: 20
+  clicks:
+    buffer-size: 10000
+    batch-size: 500
+    flush-interval-ms: 2000
